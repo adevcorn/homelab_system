@@ -1,0 +1,331 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Initialize Project Structure and Dependencies",
+        "description": "Set up the initial project structure and add all required dependencies to gleam.toml",
+        "details": "Create a new Gleam project for the homelab system and configure all required dependencies in gleam.toml. Include core OTP packages (gleam_otp v1.1.0, gleam_erlang v1.3.0), distributed clustering packages (glyn v2.0.3, barnacle v2.0.1, singularity v1.2.0), messaging packages (glubsub v1.2.0, chip v1.1.1), configuration packages (glenvy v2.0.1, gleam_json v3.0.0, dotenv_gleam v2.0.0), and utility packages (glint v1.2.1, wisp v2.0.0-rc1, lustre v5.3.4). Create the basic directory structure for the project following the architecture outlined in the PRD.",
+        "testStrategy": "Verify that the project compiles successfully with `gleam build`. Ensure all dependencies are correctly specified in gleam.toml and can be resolved. Check that the directory structure matches the architecture plan.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create New Gleam Project",
+            "description": "Initialize a new Gleam project for the homelab system using the Gleam CLI",
+            "dependencies": [],
+            "details": "Use the Gleam CLI to create a new project with `gleam new homelab_system`. Ensure the project is created with the correct name and initial structure. Configure the project metadata in gleam.toml including name, version, description, and repository information.\n<info added on 2025-09-01T10:32:16.092Z>\nBased on the user request and project context, here's the text to append to the subtask details:\n\nDependency compatibility issue discovered with the chip package (v0.9.0). Temporarily removed from gleam.toml to prevent build failures. Chip package is incompatible with current gleam_otp and gleam_erlang APIs. Recommended actions:\n- Investigate latest chip package version for compatibility\n- Research alternative messaging packages if chip cannot be updated\n- Defer chip package integration until compatibility is resolved\n- Project builds successfully without chip, allowing continued development\n</info added on 2025-09-01T10:32:16.092Z>",
+            "status": "done",
+            "testStrategy": "Verify that the project is created successfully with the correct structure. Check that gleam.toml contains the basic project information and that `gleam build` runs without errors."
+          },
+          {
+            "id": 2,
+            "title": "Add Core OTP Dependencies",
+            "description": "Add core OTP and Erlang integration packages to gleam.toml",
+            "dependencies": [],
+            "details": "Add the following core OTP dependencies to gleam.toml: gleam_otp v1.1.0 and gleam_erlang v1.3.0. These packages provide the foundation for building OTP applications and interacting with the Erlang runtime. Update dependencies with `gleam update` to ensure they're properly resolved.\n<info added on 2025-09-01T10:42:24.298Z>\nConfirmed dependencies are correctly configured in gleam.toml. Created test module test/homelab_system/otp_test.gleam to verify imports and basic functionality. All tests pass, confirming successful integration of gleam_otp v1.1.0 and gleam_erlang v1.3.0 dependencies.\n</info added on 2025-09-01T10:42:24.298Z>",
+            "status": "done",
+            "testStrategy": "Verify that the dependencies are correctly added to gleam.toml. Run `gleam deps` to confirm they are resolved correctly. Create a simple test module that imports from these packages to verify they can be used."
+          },
+          {
+            "id": 3,
+            "title": "Add Distributed Clustering Dependencies",
+            "description": "Add distributed clustering and node management packages to gleam.toml",
+            "dependencies": [],
+            "details": "Add the following distributed clustering packages to gleam.toml: glyn v2.0.3, barnacle v2.0.1, and singularity v1.2.0. These packages provide capabilities for node discovery, cluster formation, and distributed state management. Update dependencies with `gleam update` to ensure they're properly resolved.\n<info added on 2025-09-01T10:48:17.769Z>\nBased on the user request and task context, here's the new text to append to the subtask details:\n\nUpdated distributed clustering dependencies in gleam.toml with glyn v2.0.3 for type-safe PubSub and Registry, and lifeguard v4.0.0 for actor pool management. Replaced previously mentioned barnacle and singularity packages with these more suitable alternatives. Created test module test/homelab_system/clustering_test.gleam to verify dependency imports and integration. All dependency tests pass, confirming correct configuration and compatibility with distributed clustering requirements.\n</info added on 2025-09-01T10:48:17.769Z>",
+            "status": "done",
+            "testStrategy": "Verify that the dependencies are correctly added to gleam.toml. Run `gleam deps` to confirm they are resolved correctly. Create a simple test module that imports from these packages to verify they can be used."
+          },
+          {
+            "id": 4,
+            "title": "Add Configuration and Utility Dependencies",
+            "description": "Add configuration management, messaging, and utility packages to gleam.toml",
+            "dependencies": [],
+            "details": "Add the following dependencies to gleam.toml: messaging packages (glubsub v1.2.0, chip v1.1.1), configuration packages (glenvy v2.0.1, gleam_json v3.0.0, dotenv_gleam v2.0.0), and utility packages (glint v1.2.1, wisp v2.0.0-rc1, lustre v5.3.4). These provide essential functionality for configuration management, messaging between components, and various utilities. Update dependencies with `gleam update`.",
+            "status": "in-progress",
+            "testStrategy": "Verify that all dependencies are correctly added to gleam.toml. Run `gleam deps` to confirm they are resolved correctly. Create simple test modules that import from these packages to verify they can be used."
+          },
+          {
+            "id": 5,
+            "title": "Create Project Directory Structure",
+            "description": "Set up the directory structure according to the architecture outlined in the PRD",
+            "dependencies": [],
+            "details": "Create the following directory structure: src/homelab_system/ with subdirectories for core components (agent/, cluster/, gateway/), utilities (config/, tracing/, messaging/), and interfaces (api/, cli/). Create placeholder modules in each directory with appropriate module documentation. Set up the test directory structure to mirror the src structure for unit tests.",
+            "status": "pending",
+            "testStrategy": "Verify that all directories are created with the correct structure. Ensure placeholder modules compile successfully with `gleam build`. Check that the directory structure matches the architecture plan from the PRD."
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Implement Core Configuration Management",
+        "description": "Create configuration management modules for node and cluster settings",
+        "details": "Implement the configuration management system using gleam_json v3.0.0 and glenvy v2.0.1. Create two main modules: node_config.gleam for individual node configuration and cluster_config.gleam for cluster-wide settings. Use glenvy to load environment variables with fallback to default values. Implement JSON configuration loading with gleam_json. Define clear type definitions for all configuration options. Include configuration for node roles (coordinator, agent, gateway), cluster settings (name, discovery method), and network settings (bind address, port). Add support for dotenv_gleam v2.0.0 to load configuration from .env files during development.",
+        "testStrategy": "Create test cases with different environment variables and configuration files to verify correct loading. Test fallback to defaults when values are missing. Verify type safety of configuration objects. Test loading from both environment variables and JSON files.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Create Main Supervision Tree",
+        "description": "Implement the main OTP supervision tree for the application",
+        "details": "Using gleam_otp v1.1.0, create the main supervision tree in src/homelab_system/supervisor.gleam. Implement a one_for_one restart strategy for top-level supervisors. Create separate child supervisors for different system components: agent_supervisor for managing agent processes, cluster_supervisor for managing cluster-related processes, and gateway_supervisor for external interfaces. Implement proper shutdown handling to ensure graceful termination. Use the gleam_otp Actor behavior for process management. Define clear interfaces for starting and stopping the supervision tree. Include proper error handling and logging for supervisor restarts.",
+        "testStrategy": "Test supervisor restart behavior by intentionally crashing child processes. Verify that the supervision hierarchy correctly restarts processes according to the defined strategy. Test graceful shutdown of the entire supervision tree. Verify that all resources are properly cleaned up during shutdown.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Implement Base Agent Framework",
+        "description": "Create the foundational agent behavior and supervision system",
+        "details": "Implement the base agent framework in src/homelab_system/agent/agent.gleam using gleam_otp and singularity v1.2.0. Define a common Agent behavior trait that all specialized agents will implement. Include standard lifecycle methods: init, handle_message, and terminate. Implement agent registration with singularity to ensure unique agent instances. Create an agent supervisor in src/homelab_system/agent/supervisor.gleam that manages agent lifecycles. Use working_actors v1.1.0 for parallel agent operations. Implement proper error handling and recovery mechanisms. Add support for agent configuration and capability declaration.",
+        "testStrategy": "Create test cases for agent lifecycle: initialization, message handling, and termination. Test supervisor restart behavior with intentionally failing agents. Verify that agent registration works correctly with singularity. Test parallel operations with multiple agent instances.",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Implement Distributed Tracing System",
+        "description": "Create a distributed tracing system with correlation IDs for debugging distributed flows",
+        "details": "Implement a distributed tracing system in src/homelab_system/tracing/correlation.gleam. Use youid v1.5 for generating unique correlation IDs that can be passed between nodes. Create a TraceContext type that includes correlation ID, timestamp, and source information. Implement functions to create, propagate, and extract trace contexts. Add middleware for automatically adding trace context to messages between nodes. Create utility functions for logging with trace context. Ensure trace context is preserved across node boundaries in the cluster. Implement sampling capability to reduce overhead in high-volume scenarios.",
+        "testStrategy": "Test correlation ID generation and uniqueness. Verify trace context propagation across simulated node boundaries. Test logging with trace context. Measure performance impact of tracing and verify that sampling works correctly. Test trace context extraction from different message types.",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Implement Command-Line Interface",
+        "description": "Create a CLI interface for managing the homelab system",
+        "details": "Implement a command-line interface using glint v1.2.1 in src/homelab_system/cli/. Create commands for starting nodes with different roles (coordinator, agent, gateway). Implement options for cluster configuration (--cluster-name, --bind, --join). Add commands for viewing cluster status and managing nodes. Implement administrative commands for service management. Create help documentation for all commands. Support environment variable configuration via command line arguments. Implement proper error handling and user-friendly error messages. Add support for configuration file specification via CLI.",
+        "testStrategy": "Test each command with various arguments and verify correct behavior. Test error handling with invalid arguments. Verify help documentation is complete and accurate. Test environment variable handling. Test with both valid and invalid configuration files.",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Implement Cluster Node Manager",
+        "description": "Create the node lifecycle management system for cluster operations",
+        "details": "Implement the cluster node manager in src/homelab_system/cluster/node_manager.gleam using barnacle v2.0.1. Create functions for node joining, leaving, and failure detection. Implement node metadata management to track roles and capabilities. Use barnacle's self-healing capabilities for automatic recovery. Implement proper error handling for network partitions and communication failures. Create a node registry to track all nodes in the cluster. Implement node health checking and automatic removal of unhealthy nodes. Add support for graceful node shutdown and handover of responsibilities.",
+        "testStrategy": "Test node joining and leaving with simulated cluster environments. Verify automatic recovery after simulated node failures. Test network partition handling. Verify node metadata is correctly maintained. Test health checking and unhealthy node removal. Test graceful shutdown and responsibility handover.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Implement Service Discovery Mechanism",
+        "description": "Create a service discovery system for locating services across the cluster",
+        "details": "Implement service discovery in src/homelab_system/cluster/discovery.gleam using glyn v2.0.3 and chip v1.1.1. Create a ServiceRegistry type for registering and discovering services. Implement functions for service registration, deregistration, and lookup. Use glyn for distributed registry synchronization across nodes. Implement service health checking and automatic deregistration of unhealthy services. Add support for service metadata and filtering. Create a caching layer to improve lookup performance. Implement proper error handling for service lookup failures. Add support for service versioning.",
+        "testStrategy": "Test service registration and discovery across simulated cluster nodes. Verify registry synchronization with glyn. Test health checking and automatic deregistration. Test service filtering by metadata. Measure lookup performance with and without caching. Test error handling with unavailable services. Test service versioning support.",
+        "priority": "high",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Implement Distributed PubSub Messaging",
+        "description": "Create a distributed publish-subscribe messaging system",
+        "details": "Implement a distributed PubSub system in src/homelab_system/messaging/pubsub.gleam using glubsub v1.2.0 and glyn v2.0.3. Create Topic and Subscription types for message routing. Implement functions for publishing messages, subscribing to topics, and handling message delivery. Use glyn for distributed topic synchronization across nodes. Implement message persistence for reliability. Add support for message filtering and pattern matching on topics. Create a delivery guarantee system with acknowledgments. Implement proper error handling for message delivery failures. Add support for message prioritization.",
+        "testStrategy": "Test message publishing and subscription across simulated cluster nodes. Verify topic synchronization with glyn. Test message persistence and delivery after subscriber reconnection. Test message filtering and pattern matching. Verify delivery guarantees with acknowledgments. Test error handling with delivery failures. Test message prioritization.",
+        "priority": "high",
+        "dependencies": [
+          7,
+          8
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Implement Cluster Health Monitoring",
+        "description": "Create a health monitoring system for the cluster",
+        "details": "Implement cluster health monitoring in src/homelab_system/cluster/health.gleam. Create a HealthMonitor type for tracking node and service health. Implement functions for health checking, status reporting, and alerting. Use barnacle v2.0.1 for node failure detection. Implement metrics collection for CPU, memory, disk, and network usage. Create a health status dashboard data source. Implement automatic recovery actions for common failure scenarios. Add support for custom health checks. Create an alerting system for critical health issues. Implement health history for trend analysis.",
+        "testStrategy": "Test health checking with simulated healthy and unhealthy nodes. Verify failure detection with barnacle. Test metrics collection and accuracy. Verify dashboard data source functionality. Test automatic recovery actions. Test custom health checks. Verify alerting system for critical issues. Test health history and trend analysis.",
+        "priority": "medium",
+        "dependencies": [
+          7,
+          8
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "Implement Server Monitoring Agent",
+        "description": "Create specialized agents for server monitoring",
+        "details": "Implement server monitoring agents in src/homelab_system/agents/monitoring/. Create ServerMonitor and MetricsCollector agent types. Implement metrics collection for CPU, memory, disk, and network usage. Use the base agent framework from task #4. Implement configurable monitoring intervals. Create a metrics storage system with time-series data. Implement threshold-based alerting. Add support for custom metrics collection. Create a metrics query API for dashboard integration. Implement historical data retention policies. Add support for monitoring external systems via SSH or API.",
+        "testStrategy": "Test metrics collection accuracy against known system values. Verify configurable monitoring intervals. Test metrics storage and retrieval. Test threshold-based alerting with simulated threshold violations. Test custom metrics collection. Verify metrics query API functionality. Test historical data retention. Test external system monitoring.",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "Implement Configuration Management Agent",
+        "description": "Create specialized agents for configuration management",
+        "details": "Implement configuration management agents in src/homelab_system/agents/config/. Create ConfigManager and ConfigSync agent types. Implement configuration storage, retrieval, and synchronization. Use the base agent framework from task #4. Implement configuration versioning and rollback. Create a configuration validation system. Implement configuration change notifications via PubSub. Add support for configuration templates. Create a configuration audit log. Implement configuration deployment to target systems. Add support for configuration inheritance and overrides.",
+        "testStrategy": "Test configuration storage, retrieval, and synchronization. Verify versioning and rollback functionality. Test configuration validation with valid and invalid configurations. Test change notifications via PubSub. Verify template rendering. Test audit logging. Test configuration deployment to simulated target systems. Test inheritance and override behavior.",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 13,
+        "title": "Implement Health Check Agent",
+        "description": "Create specialized agents for health checking",
+        "details": "Implement health check agents in src/homelab_system/agents/health/. Create HealthChecker and StatusReporter agent types. Implement health checking for various service types (HTTP, TCP, process, custom). Use the base agent framework from task #4. Implement configurable health check intervals. Create a health status storage system. Implement threshold-based alerting for health status changes. Add support for custom health check implementations. Create a health status query API for dashboard integration. Implement health check dependencies and aggregation. Add support for external health check integration.",
+        "testStrategy": "Test health checking with simulated healthy and unhealthy services. Verify configurable check intervals. Test health status storage and retrieval. Test alerting with simulated status changes. Test custom health check implementations. Verify query API functionality. Test health check dependencies and aggregation. Test external health check integration.",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "Implement Alert Processing Agent",
+        "description": "Create specialized agents for alert processing",
+        "details": "Implement alert processing agents in src/homelab_system/agents/alerts/. Create AlertProcessor and NotificationSender agent types. Implement alert ingestion, processing, and routing. Use the base agent framework from task #4. Implement alert severity classification and prioritization. Create notification channels (email, webhook, SMS). Implement alert deduplication and correlation. Add support for alert acknowledgment and resolution. Create an alert history and reporting system. Implement escalation policies for unacknowledged alerts. Add support for maintenance windows and alert suppression.",
+        "testStrategy": "Test alert ingestion, processing, and routing. Verify severity classification and prioritization. Test notification delivery to different channels. Test deduplication and correlation with similar alerts. Test acknowledgment and resolution workflow. Verify history and reporting functionality. Test escalation policies with simulated unacknowledged alerts. Test maintenance windows and alert suppression.",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "Implement Load Balancing System",
+        "description": "Create a load balancing system for distributing tasks across the cluster",
+        "details": "Implement a load balancing system in src/homelab_system/services/load_balancer.gleam using lifeguard v4.0.0. Create a TaskDistributor type for distributing tasks across worker nodes. Implement different load balancing strategies (round-robin, least-loaded, capability-based). Use lifeguard for worker pool management. Implement worker health checking and automatic removal of unhealthy workers. Add support for task prioritization. Create a task queue for handling backpressure. Implement proper error handling for task distribution failures. Add support for task timeout and retry logic.",
+        "testStrategy": "Test task distribution with different load balancing strategies. Verify worker pool management with lifeguard. Test health checking and unhealthy worker removal. Test task prioritization. Verify queue behavior under load. Test error handling with distribution failures. Test timeout and retry logic with simulated slow workers.",
+        "priority": "medium",
+        "dependencies": [
+          7,
+          8,
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 16,
+        "title": "Implement Domain Integration Framework",
+        "description": "Create a framework for integrating domain-specific functionality",
+        "details": "Implement a domain integration framework in src/homelab_system/domains/domain_manager.gleam. Create a Domain type for representing domain-specific functionality. Implement domain registration, discovery, and lifecycle management. Create a standardized interface for domain-specific agents. Implement domain-specific configuration management. Add support for domain dependencies and initialization order. Create a domain event system for cross-domain communication. Implement proper error handling for domain initialization failures. Add support for domain versioning and compatibility checking.",
+        "testStrategy": "Test domain registration and discovery. Verify lifecycle management with domain start and stop. Test standardized agent interface with mock domains. Test configuration management with domain-specific settings. Verify dependency resolution and initialization order. Test event system with cross-domain communication. Test error handling with initialization failures. Test versioning and compatibility checking.",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          9,
+          15
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 17,
+        "title": "Implement Network Monitoring Domain",
+        "description": "Create a network monitoring domain as an example implementation",
+        "details": "Implement a network monitoring domain in src/homelab_system/domains/network/. Create NetworkAgent and NetworkScanner types. Implement network discovery and device tracking. Use the domain integration framework from task #16. Implement network topology mapping. Create network performance monitoring (latency, bandwidth, packet loss). Implement alerting for network issues. Add support for protocol-specific monitoring (HTTP, DNS, SMTP). Create a network status dashboard data source. Implement historical network data storage and analysis.",
+        "testStrategy": "Test network discovery with simulated network devices. Verify topology mapping accuracy. Test performance monitoring with known network conditions. Test alerting with simulated network issues. Test protocol-specific monitoring. Verify dashboard data source functionality. Test historical data storage and analysis.",
+        "priority": "low",
+        "dependencies": [
+          16
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 18,
+        "title": "Implement HTTP API Gateway",
+        "description": "Create an HTTP API gateway for external access",
+        "details": "Implement an HTTP API gateway in src/homelab_system/gateway/http_api.gleam using wisp v2.0.0-rc1. Create RESTful API endpoints for cluster management, monitoring, and configuration. Implement authentication and authorization. Create API documentation using OpenAPI. Implement rate limiting and request validation. Add support for different output formats (JSON, XML, CSV). Create a versioned API design. Implement proper error handling and status codes. Add support for WebSocket connections for real-time updates.",
+        "testStrategy": "Test API endpoints with various request scenarios. Verify authentication and authorization with valid and invalid credentials. Test API documentation accuracy. Test rate limiting with high request volumes. Verify different output formats. Test versioned API behavior. Test error handling with invalid requests. Test WebSocket connections for real-time updates.",
+        "priority": "medium",
+        "dependencies": [
+          7,
+          8,
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 19,
+        "title": "Implement Web Dashboard",
+        "description": "Create a web dashboard for system monitoring and management",
+        "details": "Implement a web dashboard in src/homelab_system/gateway/dashboard.gleam using lustre v5.3.4. Create dashboard pages for cluster overview, node details, service status, and alerts. Implement real-time updates using WebSocket connections. Create interactive visualizations for metrics and topology. Implement user authentication and role-based access control. Add support for dashboard customization and saved views. Create a responsive design for different device sizes. Implement dark mode and accessibility features. Add support for exporting dashboard data.",
+        "testStrategy": "Test dashboard rendering with different data scenarios. Verify real-time updates with simulated data changes. Test interactive visualizations. Test authentication and access control with different user roles. Verify customization and saved views. Test responsive design on different screen sizes. Test dark mode and accessibility features. Test data export functionality.",
+        "priority": "low",
+        "dependencies": [
+          18
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 20,
+        "title": "Implement Deployment Automation",
+        "description": "Create deployment automation for the homelab system",
+        "details": "Implement deployment automation scripts and configuration. Create Docker and Docker Compose configurations for containerized deployment. Implement systemd service definitions for Linux deployment. Create deployment documentation with step-by-step instructions. Implement backup and restore procedures. Add support for configuration templates for different deployment scenarios. Create upgrade and rollback procedures. Implement security hardening guidelines. Add support for monitoring the deployment process.",
+        "testStrategy": "Test Docker and Docker Compose deployments in isolated environments. Verify systemd service functionality on Linux systems. Test documentation accuracy with fresh installations. Test backup and restore procedures. Verify configuration templates with different scenarios. Test upgrade and rollback procedures. Verify security hardening effectiveness. Test deployment monitoring.",
+        "priority": "low",
+        "dependencies": [
+          1,
+          2,
+          3,
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-09-01T09:14:24.229Z",
+      "updated": "2025-09-01T10:50:17.918Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
