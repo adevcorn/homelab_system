@@ -1,7 +1,7 @@
 /// Test module to verify distributed clustering dependencies are working correctly
 import gleeunit/should
-import glyn/registry
 import glyn/pubsub
+import glyn/registry
 import lifeguard
 
 pub fn glyn_registry_test() {
