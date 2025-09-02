@@ -48,5 +48,5 @@ fn run_forever() -> Nil {
   // 3. Handle application lifecycle events
   // 4. Let the OTP runtime manage the application
 
-  Nil
+  run_forever()
 }
