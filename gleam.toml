@@ -3,7 +3,9 @@ version = "1.1.0"
 description = "Distributed homelab management system using Gleam and OTP"
 licences = ["MIT"]
 repository = { type = "github", user = "yourusername", repo = "homelab_system" }
-links = [{ title = "GitHub", href = "https://github.com/yourusername/homelab_system" }]
+links = [
+    { title = "GitHub", href = "https://github.com/yourusername/homelab_system" },
+]
 
 [dependencies]
 gleam_stdlib = ">= 0.62.1 and < 1.0.0"
@@ -20,16 +22,20 @@ glubsub = ">= 1.2.0 and < 2.0.0"
 
 # Configuration & Environment
 glenvy = ">= 2.0.1 and < 3.0.0"
-gleam_json = "~> 3.0.0"     # JSON configuration
-yodel = "~> 1.0.1"          # Advanced config loading (Phase 2+)
+gleam_json = "~> 3.0.0"         # JSON configuration
+# dotenv_gleam = "~> 1.0.0"     # Environment variable loading - disabled due to gleam_erlang v1.3.0 compatibility
+simplifile = "~> 2.3.0" # File system operations
+yodel = "~> 1.0.1"      # Advanced config loading (Phase 2+)
 
 # CLI & Web Interface
-glint = "~> 1.2.1"          # Command-line parsing
-wisp = "~> 2.0.0-rc1"       # Web framework
-lustre = "~> 5.3.4"         # Frontend framework
+glint = "~> 1.2.1"    # Command-line parsing
+wisp = "~> 2.0.0-rc1" # Web framework
+lustre = "~> 5.3.4"   # Frontend framework
 
 # Utilities
-youid = "~> 1.5.0"          # UUID generation
+youid = "~> 1.5.0" # UUID generation
+gleam_http = ">= 4.1.1 and < 5.0.0"
+gleam_regexp = ">= 1.1.1 and < 2.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"
