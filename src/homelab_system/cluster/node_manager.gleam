@@ -242,7 +242,7 @@ fn handle_node_failed(
   case dict.get(state.cluster_nodes, node_id) {
     Ok(node_info) -> {
       let updated_node =
-        NodeInfo(..node_info, status: NodeDown, health: types.Unhealthy)
+        NodeInfo(..node_info, status: NodeDown, health: types.Failed)
       let updated_nodes =
         dict.insert(state.cluster_nodes, node_id, updated_node)
       let new_state = NodeManagerState(..state, cluster_nodes: updated_nodes)
@@ -344,7 +344,7 @@ fn handle_shutdown(
   // Skip logging during shutdown to avoid I/O termination issues
 
   // Leave cluster gracefully before shutdown
-  case state.cluster_handle {
+  let _ = case state.cluster_handle {
     option.Some(_handle) -> {
       // Cluster cleanup without logging
       Nil
@@ -367,7 +367,7 @@ fn calculate_node_health(state: NodeManagerState) -> HealthStatus {
     }
     types.Starting -> types.Unknown
     types.Stopping -> types.Degraded
-    types.Failed -> types.Unhealthy
+    types.Error -> types.Failed
     _ -> types.Unknown
   }
 }

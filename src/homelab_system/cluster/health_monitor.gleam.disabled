@@ -1,0 +1,573 @@
+/// Cluster health monitor for comprehensive cluster state monitoring
+/// Provides real-time health checking, failure detection, and cluster diagnostics
+import gleam/dict.{type Dict}
+import gleam/erlang/process.{type Subject}
+import gleam/list
+import gleam/otp/actor
+import gleam/result
+
+import homelab_system/config/cluster_config.{type ClusterConfig}
+import homelab_system/config/node_config.{type NodeConfig}
+import homelab_system/utils/logging
+import homelab_system/utils/types.{
+  type HealthStatus, type NodeId, type ServiceStatus, type Timestamp, Degraded,
+  Failed, Healthy, NodeDown, Running, Unknown, node_id_to_string,
+}
+
+/// Health check types
+pub type HealthCheckType {
+  NodeHealthCheck
+  ServiceHealthCheck
+  ClusterHealthCheck
+  NetworkHealthCheck
+  ResourceHealthCheck
+}
+
+/// Health check result
+pub type HealthCheckResult {
+  HealthCheckResult(
+    check_type: HealthCheckType,
+    target: String,
+    status: HealthStatus,
+    message: String,
+    timestamp: Timestamp,
+    duration_ms: Int,
+    metadata: Dict(String, String),
+  )
+}
+
+/// Cluster health summary
+pub type ClusterHealthSummary {
+  ClusterHealthSummary(
+    overall_status: HealthStatus,
+    total_nodes: Int,
+    healthy_nodes: Int,
+    unhealthy_nodes: Int,
+    total_services: Int,
+    healthy_services: Int,
+    unhealthy_services: Int,
+    last_updated: Timestamp,
+    cluster_uptime: Int,
+  )
+}
+
+/// Node health information
+pub type NodeHealthInfo {
+  NodeHealthInfo(
+    node_id: NodeId,
+    status: HealthStatus,
+    last_heartbeat: Timestamp,
+    uptime: Int,
+    resource_usage: ResourceUsage,
+    running_services: List(String),
+    failed_services: List(String),
+  )
+}
+
+/// Service health information
+pub type ServiceHealthInfo {
+  ServiceHealthInfo(
+    service_id: String,
+    node_id: NodeId,
+    status: ServiceStatus,
+    health_status: HealthStatus,
+    last_check: Timestamp,
+    uptime: Int,
+    restart_count: Int,
+    error_message: String,
+  )
+}
+
+/// Resource usage information
+pub type ResourceUsage {
+  ResourceUsage(
+    cpu_percent: Float,
+    memory_mb: Int,
+    disk_mb: Int,
+    network_bytes_per_sec: Int,
+  )
+}
+
+/// Health monitor messages
+pub type HealthMonitorMessage {
+  StartMonitoring
+  StopMonitoring
+  RegisterNode(NodeId, NodeConfig)
+  UnregisterNode(NodeId)
+  HeartbeatReceived(NodeId, Timestamp)
+  HealthCheckCompleted(HealthCheckResult)
+  GetHealthSummary(Subject(Result(ClusterHealthSummary, String)))
+  GetNodeHealth(NodeId, Subject(Result(NodeHealthInfo, String)))
+  GetServiceHealth(String, Subject(Result(ServiceHealthInfo, String)))
+  CheckClusterHealth
+  TriggerHealthCheck(NodeId, HealthCheckType)
+  UpdateNodeStatus(NodeId, HealthStatus)
+  UpdateServiceStatus(String, NodeId, ServiceStatus, HealthStatus)
+  Shutdown
+}
+
+/// Health monitor state
+pub type HealthMonitorState {
+  HealthMonitorState(
+    node_id: NodeId,
+    cluster_name: String,
+    nodes: Dict(String, NodeHealthInfo),
+    services: Dict(String, ServiceHealthInfo),
+    health_checks: Dict(String, HealthCheckResult),
+    monitoring_active: Bool,
+    check_interval_ms: Int,
+    heartbeat_timeout_ms: Int,
+    last_cluster_check: Timestamp,
+    start_time: Timestamp,
+  )
+}
+
+/// Start health monitor actor
+pub fn start_health_monitor(
+  node_config: NodeConfig,
+  cluster_config: ClusterConfig,
+) -> Result(Subject(HealthMonitorMessage), actor.StartError) {
+  let initial_state =
+    HealthMonitorState(
+      node_id: types.NodeId(node_config.node_id),
+      cluster_name: cluster_config.cluster_name,
+      nodes: dict.new(),
+      services: dict.new(),
+      health_checks: dict.new(),
+      monitoring_active: False,
+      check_interval_ms: 30_000,
+      heartbeat_timeout_ms: 60_000,
+      last_cluster_check: types.now(),
+      start_time: types.now(),
+    )
+
+  actor.start(initial_state, handle_message)
+}
+
+/// Handle health monitor messages
+fn handle_message(
+  state: HealthMonitorState,
+  message: HealthMonitorMessage,
+) -> actor.Next(HealthMonitorMessage, HealthMonitorState) {
+  case message {
+    StartMonitoring -> handle_start_monitoring(state)
+    StopMonitoring -> handle_stop_monitoring(state)
+    RegisterNode(node_id, node_config) ->
+      handle_register_node(state, node_id, node_config)
+    UnregisterNode(node_id) -> handle_unregister_node(state, node_id)
+    HeartbeatReceived(node_id, timestamp) ->
+      handle_heartbeat_received(state, node_id, timestamp)
+    HealthCheckCompleted(result) -> handle_health_check_completed(state, result)
+    GetHealthSummary(reply_with) -> handle_get_health_summary(state, reply_with)
+    GetNodeHealth(node_id, reply_with) ->
+      handle_get_node_health(state, node_id, reply_with)
+    GetServiceHealth(service_id, reply_with) ->
+      handle_get_service_health(state, service_id, reply_with)
+    CheckClusterHealth -> handle_check_cluster_health(state)
+    TriggerHealthCheck(node_id, check_type) ->
+      handle_trigger_health_check(state, node_id, check_type)
+    UpdateNodeStatus(node_id, status) ->
+      handle_update_node_status(state, node_id, status)
+    UpdateServiceStatus(service_id, node_id, service_status, health_status) ->
+      handle_update_service_status(
+        state,
+        service_id,
+        node_id,
+        service_status,
+        health_status,
+      )
+    Shutdown -> handle_shutdown(state)
+  }
+}
+
+fn handle_start_monitoring(
+  state: HealthMonitorState,
+) -> actor.Next(HealthMonitorMessage, HealthMonitorState) {
+  logging.info("Starting health monitoring")
+  let updated_state = HealthMonitorState(..state, monitoring_active: True)
+  actor.continue(updated_state)
+}
+
+fn handle_stop_monitoring(
+  state: HealthMonitorState,
+) -> actor.Next(HealthMonitorMessage, HealthMonitorState) {
+  logging.info("Stopping health monitoring")
+  let updated_state = HealthMonitorState(..state, monitoring_active: False)
+  actor.continue(updated_state)
+}
+
+fn handle_register_node(
+  state: HealthMonitorState,
+  node_id: NodeId,
+  _node_config: NodeConfig,
+) -> actor.Next(HealthMonitorMessage, HealthMonitorState) {
+  let node_info =
+    NodeHealthInfo(
+      node_id: node_id,
+      status: Unknown,
+      last_heartbeat: types.now(),
+      uptime: 0,
+      resource_usage: ResourceUsage(0.0, 0, 0, 0),
+      running_services: [],
+      failed_services: [],
+    )
+
+  let node_id_str = node_id_to_string(node_id)
+  let updated_nodes = dict.insert(state.nodes, node_id_str, node_info)
+  let updated_state = HealthMonitorState(..state, nodes: updated_nodes)
+
+  logging.info("Registered node: " <> node_id_str)
+  actor.continue(updated_state)
+}
+
+fn handle_unregister_node(
+  state: HealthMonitorState,
+  node_id: NodeId,
+) -> actor.Next(HealthMonitorMessage, HealthMonitorState) {
+  let node_id_str = node_id_to_string(node_id)
+  let updated_nodes = dict.delete(state.nodes, node_id_str)
+  let updated_state = HealthMonitorState(..state, nodes: updated_nodes)
+
+  logging.info("Unregistered node: " <> node_id_str)
+  actor.continue(updated_state)
+}
+
+fn handle_heartbeat_received(
+  state: HealthMonitorState,
+  node_id: NodeId,
+  timestamp: Timestamp,
+) -> actor.Next(HealthMonitorMessage, HealthMonitorState) {
+  logging.debug("Received heartbeat from node: " <> node_id_to_string(node_id))
+
+  let node_id_str = node_id_to_string(node_id)
+  case dict.get(state.nodes, node_id_str) {
+    Ok(node_info) -> {
+      let updated_node_info =
+        NodeHealthInfo(..node_info, status: Healthy, last_heartbeat: timestamp)
+      let updated_nodes =
+        dict.insert(state.nodes, node_id_str, updated_node_info)
+      let updated_state = HealthMonitorState(..state, nodes: updated_nodes)
+      actor.continue(updated_state)
+    }
+    Error(_) -> {
+      logging.warn("Received heartbeat from unknown node: " <> node_id_str)
+      actor.continue(state)
+    }
+  }
+}
+
+fn perform_health_check(
+  _node_id: NodeId,
+  _check_type: HealthCheckType,
+) -> HealthCheckResult {
+  // Placeholder implementation
+  let start_time = types.now()
+  let end_time = types.now()
+
+  // Extract timestamps for duration calculation
+  let Timestamp(start_ms) = start_time
+  let Timestamp(end_ms) = end_time
+  let duration = end_ms - start_ms
+
+  HealthCheckResult(
+    check_type: NodeHealthCheck,
+    target: "placeholder",
+    status: Healthy,
+    message: "Health check completed successfully",
+    timestamp: end_time,
+    duration_ms: duration,
+    metadata: dict.new(),
+  )
+}
+
+fn handle_health_check_completed(
+  state: HealthMonitorState,
+  result: HealthCheckResult,
+) -> actor.Next(HealthMonitorMessage, HealthMonitorState) {
+  let check_key =
+    result.target <> "_" <> health_check_type_to_string(result.check_type)
+  let updated_checks = dict.insert(state.health_checks, check_key, result)
+  let updated_state = HealthMonitorState(..state, health_checks: updated_checks)
+  actor.continue(updated_state)
+}
+
+fn handle_get_health_summary(
+  state: HealthMonitorState,
+  reply_with: Subject(Result(ClusterHealthSummary, String)),
+) -> actor.Next(HealthMonitorMessage, HealthMonitorState) {
+  let summary = generate_cluster_health_summary(state)
+  process.send(reply_with, Ok(summary))
+  actor.continue(state)
+}
+
+fn handle_get_node_health(
+  state: HealthMonitorState,
+  node_id: NodeId,
+  reply_with: Subject(Result(NodeHealthInfo, String)),
+) -> actor.Next(HealthMonitorMessage, HealthMonitorState) {
+  let node_id_str = node_id_to_string(node_id)
+  case dict.get(state.nodes, node_id_str) {
+    Ok(node_info) -> process.send(reply_with, Ok(node_info))
+    Error(_) ->
+      process.send(reply_with, Error("Node not found: " <> node_id_str))
+  }
+  actor.continue(state)
+}
+
+fn handle_get_service_health(
+  state: HealthMonitorState,
+  service_id: String,
+  reply_with: Subject(Result(ServiceHealthInfo, String)),
+) -> actor.Next(HealthMonitorMessage, HealthMonitorState) {
+  case dict.get(state.services, service_id) {
+    Ok(service_info) -> process.send(reply_with, Ok(service_info))
+    Error(_) ->
+      process.send(reply_with, Error("Service not found: " <> service_id))
+  }
+  actor.continue(state)
+}
+
+fn handle_check_cluster_health(
+  state: HealthMonitorState,
+) -> actor.Next(HealthMonitorMessage, HealthMonitorState) {
+  logging.debug("Performing cluster health check")
+  let updated_state =
+    HealthMonitorState(..state, last_cluster_check: types.now())
+  actor.continue(updated_state)
+}
+
+fn handle_trigger_health_check(
+  state: HealthMonitorState,
+  node_id: NodeId,
+  check_type: HealthCheckType,
+) -> actor.Next(HealthMonitorMessage, HealthMonitorState) {
+  let _result = perform_health_check(node_id, check_type)
+  // In a real implementation, this would trigger async health check
+  actor.continue(state)
+}
+
+fn handle_update_node_status(
+  state: HealthMonitorState,
+  node_id: NodeId,
+  status: HealthStatus,
+) -> actor.Next(HealthMonitorMessage, HealthMonitorState) {
+  let node_id_str = node_id_to_string(node_id)
+  case dict.get(state.nodes, node_id_str) {
+    Ok(node_info) -> {
+      let updated_node_info = NodeHealthInfo(..node_info, status: status)
+      let updated_nodes =
+        dict.insert(state.nodes, node_id_str, updated_node_info)
+      let updated_state = HealthMonitorState(..state, nodes: updated_nodes)
+      actor.continue(updated_state)
+    }
+    Error(_) -> {
+      logging.warn(
+        "Attempted to update status for unknown node: " <> node_id_str,
+      )
+      actor.continue(state)
+    }
+  }
+}
+
+fn handle_update_service_status(
+  state: HealthMonitorState,
+  service_id: String,
+  node_id: NodeId,
+  service_status: ServiceStatus,
+  health_status: HealthStatus,
+) -> actor.Next(HealthMonitorMessage, HealthMonitorState) {
+  case dict.get(state.services, service_id) {
+    Ok(service_info) -> {
+      let updated_service_info =
+        ServiceHealthInfo(
+          ..service_info,
+          status: service_status,
+          health_status: health_status,
+          last_check: types.now(),
+        )
+      let updated_services =
+        dict.insert(state.services, service_id, updated_service_info)
+      let updated_state =
+        HealthMonitorState(..state, services: updated_services)
+      actor.continue(updated_state)
+    }
+    Error(_) -> {
+      // Create new service entry
+      let service_info =
+        ServiceHealthInfo(
+          service_id: service_id,
+          node_id: node_id,
+          status: service_status,
+          health_status: health_status,
+          last_check: types.now(),
+          uptime: 0,
+          restart_count: 0,
+          error_message: "",
+        )
+      let updated_services =
+        dict.insert(state.services, service_id, service_info)
+      let updated_state =
+        HealthMonitorState(..state, services: updated_services)
+      actor.continue(updated_state)
+    }
+  }
+}
+
+fn handle_shutdown(
+  _state: HealthMonitorState,
+) -> actor.Next(HealthMonitorMessage, HealthMonitorState) {
+  logging.info("Health monitor shutting down")
+  actor.stop(process.Normal)
+}
+
+fn generate_cluster_health_summary(
+  state: HealthMonitorState,
+) -> ClusterHealthSummary {
+  let node_count = dict.size(state.nodes)
+  let service_count = dict.size(state.services)
+
+  let healthy_nodes =
+    list.length(
+      list.filter(dict.values(state.nodes), fn(node) { node.status == Healthy }),
+    )
+
+  let healthy_services =
+    list.length(
+      list.filter(dict.values(state.services), fn(service) {
+        service.health_status == Healthy
+      }),
+    )
+
+  let overall_status = case
+    healthy_nodes == node_count && healthy_services == service_count
+  {
+    True -> Healthy
+    False ->
+      case healthy_nodes > 0 || healthy_services > 0 {
+        True -> Degraded
+        False -> Failed
+      }
+  }
+
+  let Timestamp(start_ms) = state.start_time
+  let Timestamp(now_ms) = types.now()
+  let uptime = now_ms - start_ms
+
+  ClusterHealthSummary(
+    overall_status: overall_status,
+    total_nodes: node_count,
+    healthy_nodes: healthy_nodes,
+    unhealthy_nodes: node_count - healthy_nodes,
+    total_services: service_count,
+    healthy_services: healthy_services,
+    unhealthy_services: service_count - healthy_services,
+    last_updated: types.now(),
+    cluster_uptime: uptime,
+  )
+}
+
+fn health_check_type_to_string(check_type: HealthCheckType) -> String {
+  case check_type {
+    NodeHealthCheck -> "node"
+    ServiceHealthCheck -> "service"
+    ClusterHealthCheck -> "cluster"
+    NetworkHealthCheck -> "network"
+    ResourceHealthCheck -> "resource"
+  }
+}
+
+fn health_status_to_string(status: HealthStatus) -> String {
+  case status {
+    Healthy -> "healthy"
+    Degraded -> "degraded"
+    Failed -> "failed"
+    NodeDown -> "down"
+    Unknown -> "unknown"
+  }
+}
+
+fn now_timestamp() -> Timestamp {
+  types.now()
+}
+
+/// Public API functions for health monitoring
+/// Get cluster health summary
+pub fn get_cluster_health(
+  monitor: Subject(HealthMonitorMessage),
+) -> Result(ClusterHealthSummary, String) {
+  process.call(monitor, GetHealthSummary, 5000)
+}
+
+/// Get node health information
+pub fn get_node_health(
+  monitor: Subject(HealthMonitorMessage),
+  node_id: NodeId,
+) -> Result(NodeHealthInfo, String) {
+  process.call(monitor, GetNodeHealth(node_id, _), 5000)
+}
+
+/// Get service health information
+pub fn get_service_health(
+  monitor: Subject(HealthMonitorMessage),
+  service_id: String,
+) -> Result(ServiceHealthInfo, String) {
+  process.call(monitor, GetServiceHealth(service_id, _), 5000)
+}
+
+/// Register a new node for monitoring
+pub fn register_node(
+  monitor: Subject(HealthMonitorMessage),
+  node_id: NodeId,
+  node_config: NodeConfig,
+) -> Nil {
+  process.send(monitor, RegisterNode(node_id, node_config))
+}
+
+/// Unregister a node from monitoring
+pub fn unregister_node(
+  monitor: Subject(HealthMonitorMessage),
+  node_id: NodeId,
+) -> Nil {
+  process.send(monitor, UnregisterNode(node_id))
+}
+
+/// Send heartbeat for a node
+pub fn send_heartbeat(
+  monitor: Subject(HealthMonitorMessage),
+  node_id: NodeId,
+) -> Nil {
+  process.send(monitor, HeartbeatReceived(node_id, types.now()))
+}
+
+/// Start health monitoring
+pub fn start_monitoring(monitor: Subject(HealthMonitorMessage)) -> Nil {
+  process.send(monitor, StartMonitoring)
+}
+
+/// Stop health monitoring
+pub fn stop_monitoring(monitor: Subject(HealthMonitorMessage)) -> Nil {
+  process.send(monitor, StopMonitoring)
+}
+
+/// Update node status
+pub fn update_node_status(
+  monitor: Subject(HealthMonitorMessage),
+  node_id: NodeId,
+  status: HealthStatus,
+) -> Nil {
+  process.send(monitor, UpdateNodeStatus(node_id, status))
+}
+
+/// Update service status
+pub fn update_service_status(
+  monitor: Subject(HealthMonitorMessage),
+  service_id: String,
+  node_id: NodeId,
+  service_status: ServiceStatus,
+  health_status: HealthStatus,
+) -> Nil {
+  process.send(
+    monitor,
+    UpdateServiceStatus(service_id, node_id, service_status, health_status),
+  )
+}

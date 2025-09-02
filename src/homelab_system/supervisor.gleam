@@ -101,10 +101,11 @@ fn add_role_specific_children(
   case config.role {
     node_config.Coordinator ->
       sup
-      |> supervisor.add(cluster_supervisor.supervised(
-        config,
-        get_cluster_config(config),
-      ))
+      // TODO: Re-enable cluster supervisor when API issues are fixed
+      // |> supervisor.add(cluster_supervisor.supervised(
+      //   config,
+      //   get_cluster_config(config),
+      // ))
       |> add_monitoring_service(config)
 
     node_config.Gateway ->

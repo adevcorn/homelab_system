@@ -40,17 +40,18 @@ pub type ClusterId {
 pub type HealthStatus {
   Healthy
   Degraded
-  Unhealthy
+  Failed
+  NodeDown
   Unknown
 }
 
 /// Service status enumeration
 pub type ServiceStatus {
   Running
-  Stopped
   Starting
   Stopping
-  Failed
+  Stopped
+  Error
   Maintenance
 }
 
@@ -226,7 +227,8 @@ pub fn health_status_to_string(status: HealthStatus) -> String {
   case status {
     Healthy -> "healthy"
     Degraded -> "degraded"
-    Unhealthy -> "unhealthy"
+    Failed -> "failed"
+    NodeDown -> "down"
     Unknown -> "unknown"
   }
 }
@@ -238,7 +240,7 @@ pub fn service_status_to_string(status: ServiceStatus) -> String {
     Stopped -> "stopped"
     Starting -> "starting"
     Stopping -> "stopping"
-    Failed -> "failed"
+    Error -> "failed"
     Maintenance -> "maintenance"
   }
 }

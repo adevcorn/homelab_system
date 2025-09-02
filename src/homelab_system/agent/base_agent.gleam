@@ -382,7 +382,7 @@ fn calculate_health_status(state: AgentState) -> HealthStatus {
     }
     types.Starting -> types.Unknown
     types.Stopping -> types.Degraded
-    types.Failed -> types.Unhealthy
+    types.Error -> types.Failed
     _ -> types.Unknown
   }
 }

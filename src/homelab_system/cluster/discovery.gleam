@@ -589,7 +589,8 @@ fn simulate_health_check(service_entry: ServiceEntry) -> HealthStatus {
   case service_entry.health_status {
     types.Healthy -> types.Healthy
     types.Degraded -> types.Degraded
-    types.Unhealthy -> types.Unhealthy
+    types.Failed -> types.Failed
+    types.NodeDown -> types.Failed
     types.Unknown -> types.Healthy
     // Assume healthy for simulation
   }
