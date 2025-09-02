@@ -2,7 +2,6 @@
 ////
 //// Basic test suite for the node configuration module using gleeunit.
 
-import gleam/dict
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/string

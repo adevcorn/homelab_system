@@ -11,9 +11,6 @@
 
 import gleam/dict.{type Dict}
 import gleam/list
-import gleam/result
-import gleam/string
-import glubsub
 
 /// Message topic type
 pub type Topic =

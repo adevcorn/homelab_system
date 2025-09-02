@@ -10,8 +10,6 @@
 //// - Health monitoring commands
 
 import gleam/io
-import gleam/list
-import gleam/string
 
 /// CLI application context
 pub type CliContext {
