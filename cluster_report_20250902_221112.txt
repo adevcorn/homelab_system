@@ -1,0 +1,50 @@
+Homelab Cluster Report
+Generated: 2025-09-02 22:11:12
+==================================
+
+CLUSTER CONFIGURATION:
+  Cluster Name: homelab-test-cluster
+  Log Directory: ./logs
+  Nodes Expected: coordinator, agent1, agent2, gateway
+
+NODE STATUS:
+  agent1:
+    Status: RUNNING (PID: 2575)
+    Log Lines:       80
+    Recent Activity:
+      ✅ Homelab System started successfully!
+      2024-01-01T00:00:00Z  [INFO] Application running: Homelab System - Node: homelab-node, Role: Agent (Generic), Uptime: 0s (unknown)
+      🔄 Application running... (Press Ctrl+C to stop)
+
+  agent2:
+    Status: RUNNING (PID: 2618)
+    Log Lines:       80
+    Recent Activity:
+      ✅ Homelab System started successfully!
+      2024-01-01T00:00:00Z  [INFO] Application running: Homelab System - Node: homelab-node, Role: Agent (Generic), Uptime: 0s (unknown)
+      🔄 Application running... (Press Ctrl+C to stop)
+
+  coordinator:
+    Status: RUNNING (PID: 2527)
+    Log Lines:       80
+    Recent Activity:
+      ✅ Homelab System started successfully!
+      2024-01-01T00:00:00Z  [INFO] Application running: Homelab System - Node: homelab-node, Role: Agent (Generic), Uptime: 0s (unknown)
+      🔄 Application running... (Press Ctrl+C to stop)
+
+  gateway:
+    Status: RUNNING (PID: 2663)
+    Log Lines:       80
+    Recent Activity:
+      ✅ Homelab System started successfully!
+      2024-01-01T00:00:00Z  [INFO] Application running: Homelab System - Node: homelab-node, Role: Agent (Generic), Uptime: 0s (unknown)
+      🔄 Application running... (Press Ctrl+C to stop)
+
+NETWORK STATUS:
+  Port 4000: CLOSED
+  Port 4001: CLOSED
+  Port 4002: CLOSED
+  Port 4003: CLOSED
+
+ERROR SUMMARY:
+  No errors found in logs
