@@ -357,11 +357,26 @@
         ],
         "status": "pending",
         "subtasks": []
+      },
+      {
+        "id": 21,
+        "title": "Clean Codebase and Fix Build Warnings",
+        "description": "Address all build warnings, improve code quality through refactoring, and establish coding standards for future development.",
+        "details": "1. Analyze current build warnings using CI/CD pipeline logs and local builds.\n2. Prioritize fixes based on severity and impact:\n   - Critical issues affecting core functionality\n   - Performance-related warnings\n   - Security vulnerabilities indicated by static analysis tools\n3. Implement systematic code refactoring across the project:\n   - Standardize naming conventions (e.g., camelCase for functions, PascalCase for types)\n   - Improve function and module organization to match existing patterns in Tasks 16-20\n4. Update documentation to reflect new coding standards.\n5. Integrate automated code quality checks into CI/CD pipeline:\n   - Configure linters (e.g., `gleam lint`)\n   - Set up static analysis tools (e.g., `dialyzer`, `credo`)\n6. Create a comprehensive style guide document for the team.\n7. Review and update existing code to align with new standards, particularly in:\n   - src/homelab_system/gateway/dashboard.gleam (Task 19)\n   - src/homelab_system/domains/domain_manager.gleam (Task 16)\n8. Establish a process for maintaining coding standards moving forward.",
+        "testStrategy": "1. Run CI/CD pipeline to verify all warnings are resolved.\n2. Perform code coverage analysis using `coveralls` or similar tools.\n3. Execute static analysis checks on the entire codebase.\n4. Verify that refactored code maintains existing functionality:\n   - Test dashboard rendering (Task 19)\n   - Validate domain integration framework behavior (Task 16)\n5. Check documentation accuracy and completeness.\n6. Review automated tests to ensure they follow new coding standards.\n7. Conduct peer reviews focusing on adherence to the style guide.",
+        "status": "done",
+        "dependencies": [
+          16,
+          18,
+          19
+        ],
+        "priority": "medium",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-09-01T09:14:24.229Z",
-      "updated": "2025-09-02T08:49:11.632Z",
+      "updated": "2025-09-02T08:56:20.882Z",
       "description": "Tasks for master context"
     }
   }

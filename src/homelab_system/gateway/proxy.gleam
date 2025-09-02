@@ -16,7 +16,7 @@ import gleam/http/request.{type Request}
 import gleam/http/response.{type Response}
 import gleam/int
 import gleam/list
-import gleam/result
+
 import gleam/string
 
 /// Gateway configuration
@@ -182,7 +182,7 @@ fn proxy_request(req: Request(String), route_config: RouteConfig) -> ProxyResult
 }
 
 /// Authenticate the request
-fn authenticate_request(req: Request(String)) -> Result(Nil, String) {
+fn authenticate_request(_req: Request(String)) -> Result(Nil, String) {
   // TODO: Implement authentication logic
   // Check for API keys, JWT tokens, etc.
   Ok(Nil)
@@ -190,7 +190,7 @@ fn authenticate_request(req: Request(String)) -> Result(Nil, String) {
 
 /// Forward the request to the target service
 fn forward_request(
-  req: Request(String),
+  _req: Request(String),
   route_config: RouteConfig,
 ) -> ProxyResult {
   // TODO: Implement actual HTTP client request to target service

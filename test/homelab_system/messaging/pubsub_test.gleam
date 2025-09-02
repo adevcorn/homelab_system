@@ -138,18 +138,18 @@ pub fn broadcast_test() {
 pub fn message_creation_test() {
   // Test system messages
   let startup_msg = pubsub.system_startup_message("1.1.0")
-  let shutdown_msg = pubsub.system_shutdown_message("manual")
+  let _shutdown_msg = pubsub.system_shutdown_message("manual")
 
   // Test node messages
-  let join_msg = pubsub.node_join_message("node-1", "cluster-1")
-  let leave_msg = pubsub.node_leave_message("node-1", "shutdown")
+  let _join_msg = pubsub.node_join_message("node-1", "cluster-1")
+  let _leave_msg = pubsub.node_leave_message("node-1", "shutdown")
 
   // Test health messages
-  let health_msg =
+  let _health_msg =
     pubsub.health_status_message("api", "healthy", "all checks passed")
 
   // Test config messages
-  let config_msg = pubsub.config_change_message("port", "8080", "8081")
+  let _config_msg = pubsub.config_change_message("port", "8080", "8081")
 
   // Test message to string conversion
   let startup_str = pubsub.message_to_string(startup_msg)

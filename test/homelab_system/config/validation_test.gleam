@@ -2,7 +2,6 @@
 ////
 //// Comprehensive test suite for the validation module using gleeunit.
 
-import gleam/dict
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/string
@@ -12,9 +11,7 @@ import gleeunit/should
 import homelab_system/config/cluster_config
 import homelab_system/config/node_config
 import homelab_system/config/validation.{
-  type ValidationContext, type ValidationIssue, type ValidationSeverity,
-  SeverityError, SeverityInfo, SeverityWarning, ValidationContext,
-  ValidationIssue,
+  SeverityError, SeverityInfo, SeverityWarning, ValidationIssue,
 }
 
 pub fn main() {

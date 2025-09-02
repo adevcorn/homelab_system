@@ -9,8 +9,7 @@ import gleeunit
 import gleeunit/should
 
 import homelab_system/config/cluster_config.{
-  type ClusterConfig, type ConsensusAlgorithm, type DiscoveryMethod, Consul, DNS,
-  Etcd, Kubernetes, Multicast, PBFT, Raft, Simple, Static,
+  DNS, Multicast, PBFT, Raft, Simple, Static,
 }
 
 pub fn main() {
