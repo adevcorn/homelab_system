@@ -1,7 +1,10 @@
 /// Main OTP application for the homelab system
 /// Handles application startup, shutdown, and configuration loading
+import gleam/int
 import gleam/io
+import gleam/list
 import gleam/otp/static_supervisor.{type Supervisor}
+import gleam/string
 import homelab_system/config/node_config.{type NodeConfig}
 import homelab_system/supervisor
 import homelab_system/utils/logging
@@ -95,11 +98,7 @@ fn load_configuration() -> Result(NodeConfig, String) {
 
 /// Helper function to join strings with a separator
 fn string_join(list: List(String), separator: String) -> String {
-  case list {
-    [] -> ""
-    [first] -> first
-    [first, ..rest] -> first <> separator <> string_join(rest, separator)
-  }
+  string.join(list, separator)
 }
 
 /// Print a startup banner with system information
@@ -117,7 +116,7 @@ fn print_startup_banner(config: NodeConfig) -> Nil {
     "Bind Address: "
     <> config.network.bind_address
     <> ":"
-    <> int_to_string(config.network.port),
+    <> int.to_string(config.network.port),
   )
 
   case config.features.clustering {
@@ -163,13 +162,9 @@ fn get_current_timestamp() -> Int {
   0
 }
 
-/// Convert integer to string (placeholder - gleam_stdlib has this)
+/// Convert integer to string
 fn int_to_string(value: Int) -> String {
-  // TODO: Use gleam/int.to_string when available
-  case value {
-    0 -> "0"
-    _ -> "unknown"
-  }
+  int.to_string(value)
 }
 
 /// Get application runtime information

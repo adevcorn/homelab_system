@@ -1,5 +1,6 @@
 /// Main entry point for the homelab system
 /// Initializes and starts the OTP application with proper configuration
+import gleam/erlang/process
 import gleam/io
 import homelab_system/application
 import homelab_system/utils/logging
@@ -18,35 +19,30 @@ pub fn main() -> Nil {
       let info = application.get_info(state)
       logging.info("Application running: " <> info)
 
-      // Keep the application running
-      // In a real OTP application, this would be handled by the runtime
-      run_forever()
+      // Keep the application running by blocking the main process
+      // The supervisor tree will continue running in the background
+      wait_forever()
     }
     application.StartError(reason) -> {
       io.println("❌ Failed to start Homelab System: " <> reason)
       logging.fatal("Application startup failed: " <> reason)
 
       // Exit with error code
-      // TODO: Use proper exit mechanism when available
       io.println("Exiting...")
     }
   }
 }
 
-/// Keep the application running indefinitely
-/// In a proper OTP application, this would be managed by the runtime
-fn run_forever() -> Nil {
-  // TODO: Replace with proper OTP application lifecycle management
-  // For now, this is a placeholder that would normally be handled
-  // by the BEAM runtime when running as a proper OTP application
-
+/// Keep the application running indefinitely by waiting for system messages
+/// This approach blocks the main process while allowing the supervisor tree to run
+fn wait_forever() -> Nil {
   io.println("🔄 Application running... (Press Ctrl+C to stop)")
 
-  // In a real implementation, we would:
-  // 1. Set up signal handlers for graceful shutdown
-  // 2. Monitor the supervisor tree
-  // 3. Handle application lifecycle events
-  // 4. Let the OTP runtime manage the application
+  // Create a selector that will never receive messages, effectively blocking forever
+  // This is the proper way to keep a BEAM application alive
+  let selector = process.new_selector()
+  let _ = process.selector_receive_forever(selector)
 
-  Nil
+  // This should never be reached, but included for completeness
+  wait_forever()
 }

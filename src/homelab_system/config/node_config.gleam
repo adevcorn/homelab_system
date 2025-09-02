@@ -18,6 +18,7 @@ import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/string
 
+import glenvy/env
 import simplifile
 
 /// Node configuration type containing all node-specific settings
@@ -430,22 +431,36 @@ fn merge_feature_config(
 // Helper functions for environment variable parsing
 
 /// Get environment variable with default fallback
-fn get_env_with_default(_key: String, default: String) -> String {
-  // Simplified implementation - in production, use proper env var access
-  // For now, always return default to avoid compilation issues
-  default
+fn get_env_with_default(key: String, default: String) -> String {
+  case env.string(key) {
+    Ok(value) -> value
+    Error(_) -> default
+  }
 }
 
 /// Parse boolean environment variable
-fn parse_bool_env(_key: String, default: Bool) -> Bool {
-  // Simplified implementation - in production, use proper env var access
-  default
+fn parse_bool_env(key: String, default: Bool) -> Bool {
+  case env.string(key) {
+    Ok(value) ->
+      case string.lowercase(value) {
+        "true" | "1" | "yes" | "on" -> True
+        "false" | "0" | "no" | "off" -> False
+        _ -> default
+      }
+    Error(_) -> default
+  }
 }
 
 /// Parse integer environment variable
-fn parse_int_env(_key: String, default: Int) -> Int {
-  // Simplified implementation - in production, use proper env var access
-  default
+fn parse_int_env(key: String, default: Int) -> Int {
+  case env.string(key) {
+    Ok(value) ->
+      case int.parse(value) {
+        Ok(parsed_int) -> parsed_int
+        Error(_) -> default
+      }
+    Error(_) -> default
+  }
 }
 
 /// Parse node role from string
@@ -480,8 +495,18 @@ fn load_network_config_from_env() -> NetworkConfig {
       default.bind_address,
     ),
     port: parse_int_env("HOMELAB_PORT", default.port),
-    discovery_port: default.discovery_port,
-    external_host: default.external_host,
+    discovery_port: case get_env_with_default("HOMELAB_DISCOVERY_PORT", "") {
+      "" -> default.discovery_port
+      port_str ->
+        case int.parse(port_str) {
+          Ok(port) -> Some(port)
+          Error(_) -> default.discovery_port
+        }
+    },
+    external_host: case get_env_with_default("HOMELAB_EXTERNAL_HOST", "") {
+      "" -> default.external_host
+      host -> Some(host)
+    },
     tls_enabled: parse_bool_env("HOMELAB_TLS_ENABLED", default.tls_enabled),
     max_connections: parse_int_env(
       "HOMELAB_MAX_CONNECTIONS",
